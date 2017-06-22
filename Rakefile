@@ -1,3 +1,3 @@
 task :console do
-  exec "irb -r vegas-insider-scraper -I ./lib"
+  exec "irb -r vegas-insider-scraper"
 end

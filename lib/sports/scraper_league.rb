@@ -10,6 +10,9 @@ class ScraperLeague
 
 	def initialize
 		@moneyline_sport = false
+	end
+
+	def teams
 		@teams ||= scrape_standings
 	end
 

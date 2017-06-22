@@ -1,16 +1,24 @@
 require 'nokogiri'
 require 'open-uri'
 
-require_relative 'sports/ncaafb.rb'
-require_relative 'sports/ncaabb.rb'
-require_relative 'sports/nba.rb'
-require_relative 'sports/nfl.rb'
-require_relative 'sports/mlb.rb'
-require_relative 'sports/nhl.rb'
+require 'sports/scraper_league'
+require 'sports/ncaafb'
+require 'sports/ncaabb'
+require 'sports/nba'
+require 'sports/nfl'
+require 'sports/mlb'
+require 'sports/nhl'
 
 class VegasInsiderScraper
 
-	# LEAGUES = [NCAAFB, NCAABB, NFL, NBA, MLB, NHL]
+	attr_reader :leagues
+	LEAGUES = [NCAAFB, NCAABB, NFL, NBA, MLB, NHL]
+
+	def initialize
+		@leagues = LEAGUES.map { |league| league.new }
+	end
+
+	
 
 	# def self.get_lines
 	# 	LEAGUES.each do |league_scraper|

@@ -1,4 +1,3 @@
-require_relative 'scraper_league'
 
 class NCAAFB < ScraperLeague
 
