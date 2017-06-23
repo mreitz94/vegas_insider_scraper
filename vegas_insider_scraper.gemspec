@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name        = 'vegas_insider_scraper'
-  s.version     = '0.0.0'
+  s.version     = '0.0.1'
   s.date        = '2017-06-19'
   s.summary     = "Vegas Insider Website Scraper API"
   s.description = "A gem to scrape vegasinsider.com for stats, teams, lines, and more!"
