@@ -1,9 +1,9 @@
 Gem::Specification.new do |s|
   s.name        = 'vegas_insider_scraper'
   s.version     = '0.0.1'
-  s.date        = '2017-06-19'
-  s.summary     = "Vegas Insider Website Scraper API"
-  s.description = "A gem to scrape vegasinsider.com for stats, teams, lines, and more!"
+  s.date        = '2017-06-24'
+  s.summary     = "Sports statistics and betting lines scraper"
+  s.description = "A gem to scrape the web for sports statistics, teams, betting lines, records, and results!"
   s.authors     = ["Matthew Reitz"]
   s.email       = 'reitz1994@gmail.com'
   s.files       = [
@@ -16,6 +16,7 @@ Gem::Specification.new do |s|
                     'lib/sports/mlb.rb',
                     'lib/sports/nhl.rb',
                   ]
-  s.homepage    = 'http://rubygems.org/gems/vegas_insider_scraper'
+  s.homepage    = 'https://github.com/mreitz94/betting-tools-scraper'
   s.license     = 'MIT'
+  s.add_dependency = "nokogiri"
 end
