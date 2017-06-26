@@ -18,5 +18,6 @@ Gem::Specification.new do |s|
                   ]
   s.homepage    = 'https://github.com/mreitz94/betting-tools-scraper'
   s.license     = 'MIT'
-  s.add_dependency = "nokogiri"
+  
+  s.add_dependency "nokogiri"
 end
