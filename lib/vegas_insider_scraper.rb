@@ -12,6 +12,7 @@ require 'sports/nhl'
 class VegasInsiderScraper
 
 	attr_reader :sports
+	# supported sports
 	SPORTS = [NCAAFB, NCAABB, NFL, NBA, MLB, NHL]
 
 	def initialize
