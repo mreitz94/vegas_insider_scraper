@@ -18,7 +18,7 @@ class ScraperLeague
 
 	# Gets the upcoming/current games for the sport
 	def current_games
-		@current_games ||= get_lines("http://www.vegasinsider.com/#{sport_name}/odds/las-vegas/")
+		@current_games ||= get_lines(["http://www.vegasinsider.com/#{sport_name}/odds/las-vegas/","http://www.vegasinsider.com/#{sport_name}/odds/las-vegas/money/"])
 	end
 
 	# Gets all of the schedule and results for each team
@@ -239,29 +239,33 @@ class ScraperLeague
 
 	##########################################
 	# Gets the current lines for a given sport
-	def get_lines(url)
+	def get_lines(urls)
 		games = []
-		doc = Nokogiri::HTML(open(url))
-		doc.css('.viBodyBorderNorm .frodds-data-tbl tr').each do |game_row|
 
-			game_cell = game_row.at_css('td:first-child')
-			teams = game_cell_parser(game_cell)
-			game = Game.new(home_team: teams[1], away_team: teams[0], sport_id: sport_id)
+		urls.each { |url|
+			is_first_url = games.empty?
+			doc = Nokogiri::HTML(open(url))
+			doc.css('.viBodyBorderNorm .frodds-data-tbl tr').each do |game_row|
 
-			if game.teams_found?
-				game.update(time: get_game_time(game_cell))
-				game.update(regular_lines(get_odds(game_row)))
-				games.push game
+				game_cell = game_row.at_css('td:first-child')
+				teams = game_cell_parser(game_cell)
+				game = Game.new(home_team: teams[1], away_team: teams[0]) 
+				if game.teams_found?
+					game.update(time: get_game_time(game_cell))
+					is_first_url ? (games.push game) : (game = game.find_equal(games))
+					game.update(vegas_info: get_line(get_odds(game_row)))
+					game.update(vegas_info: get_line(get_odds_inner_html(game_row)))
 
-			else
-				last_game = games.last
-				if last_game
-					last_game.update(notes: game_cell.content)
-					last_game.update(doubleheader: doubleheader_id(game_cell.content))
+				else
+					last_game = games.last
+					if last_game
+						last_game.update(notes: game_cell.content)
+						last_game.update(doubleheader: doubleheader_id(game_cell.content))
+					end
 				end
 			end
-		end
-		games.map { |game| game.as_json }
+		}
+		games
 	end
 
 	# Utility method for scraping current lines
@@ -285,26 +289,37 @@ class ScraperLeague
 	# Utility method for scraping current lines
 	# * getting odds from the cell, removing whitespace, and converting 1/2 to 0.5
 	def get_odds(odds_element)
-		(odds_element.at_css('td:nth-child(3) a').content || '').gsub(" ","").gsub("½",".5").strip
+		(odds_element.at_css('td:nth-child(3) a')&.content || '').gsub(" ","").gsub("½",".5").strip
+	end
+	def get_odds_inner_html(odds_element)
+		((odds_element.at_css('td:nth-child(3) a'))&.inner_html || '').encode('utf-8').gsub(" ","").gsub("½",".5").strip
 	end
 
 	# Utility method for scraping current lines
 	# * parsing the lines for non-moneyline sports
-	def regular_lines(odds_string)
-		away_fav_odds = RegularExpressions::ODDS.match(odds_string) || {}
-		home_fav_odds = RegularExpressions::ALT_ODDS.match(odds_string) || {}
-			
-		result = {
-			home_team_odds: (home_fav_odds[:line] ? -odds_reader(home_fav_odds[:line]) : odds_reader(away_fav_odds[:line])),
-			away_team_odds: (away_fav_odds[:line] ? -odds_reader(away_fav_odds[:line]) : odds_reader(home_fav_odds[:line])),
-			over_under: (home_fav_odds[:ou] || away_fav_odds[:ou])
-		}
+	def get_line(odds_string)
+		odds = matchdata_to_hash(RegularExpressions::ODDS.match(odds_string)) || {}
+		runlines_odds = matchdata_to_hash(RegularExpressions::RUNLINE_ODDS.match(odds_string)) || {}
+		moneyline_odds = matchdata_to_hash(RegularExpressions::MONEYLINE_ODDS.match(odds_string)) || {}
+
+		result = odds.merge(runlines_odds).merge(moneyline_odds)
+		result.each { |k,v| result[k] = result[k].to_s.to_f if result[k] }
+		get_home_and_away(result)
+
+	end
+
+	# Utility method for scraping current lines
+	# * filling the home/away lines
+	def get_home_and_away(result)
+		result['away_line'] = -result['home_line'] if result['home_line']
+		result['home_line'] = -result['away_line'] if result['away_line']
+		result
 	end
 
 	# Utility method for scraping current lines
 	# * parsing the odds to get a number
 	def odds_reader(odds)
-		case odds when '' then nil when 'PK' then 0 else odds.to_f end
+		case odds&.strip when '',nil then nil when 'PK' then 0 else odds.to_f end
 	end
 
 	# Utility method for scraping current lines
@@ -337,12 +352,16 @@ class ScraperLeague
 				if game_finished?(row)
 					case m
 					when 2
-						unless moneyline_sport
-							formatted = odds_reader(remove_element_whitespace(cell))
-							game.update(home_team_odds: formatted, away_team_odds: (formatted ? -formatted : formatted))
+						formatted = odds_reader(remove_element_whitespace(cell))
+						home_team  = (game.home_or_away_team(team) == :home)
+						if moneyline_sport
+							home_team ? game.update(vegas_info: {home_moneyline: formatted}) : game.update(vegas_info: {away_moneyline: formatted})
+						else
+							home_line = (formatted && !home_team) ? -formatted : formatted
+							game.update(vegas_info: {home_line: home_line, away_line: (home_line ? -home_line : nil)})
 						end
 
-					when 3 then game.update(over_under: remove_element_whitespace(cell))
+					when 3 then game.update(vegas_info: { over_under: remove_element_whitespace(cell)})
 					when 4 then game.update(game_results(cell, team, opponent))
 					when 5 then game.update(ats_results(cell, team, opponent))
 					end
@@ -350,7 +369,7 @@ class ScraperLeague
 			end
 			game
 		end
-		{ team: team, games: games.compact.map{ |game| game.as_json } }
+		{ team: team, games: games.compact.map{ |game| game } }
 	end
 
 	# Utility method for scraping team page results
@@ -431,7 +450,7 @@ class ScraperLeague
 	end
 
 	def matchdata_to_hash(matchdata)
-		matchdata ? Hash[*matchdata.names.map{ |name| [name, (matchdata[name] ? matchdata[name].downcase.to_sym : nil)] }.flatten] : {}
+		matchdata ? Hash[*matchdata.names.map{ |name| [name,(matchdata[name] ? matchdata[name].downcase.to_sym : nil)] }.flatten].compact : {}
 	end
 
 	# Regular Expressions Module
@@ -442,8 +461,12 @@ class ScraperLeague
 
 		TIME_REGEX = /(?<mo>\d{2})\/(?<d>\d{2})  (?<h>\d+):(?<mi>\d{2}) (?<mer>\w{2})/
 		MONEYLINE_OVER_UNDER = /(?<ou>\d+(\.5)?)[ou]/x
-		ODDS = /-?(?<line>\w+(\.5)?)-\d\d(?<ou>\d+(\.5)?)[ou]-\d\d/x
-		ALT_ODDS = /(?<ou>\d+(\.5)?)[ou]-\d\d-?(?<line>\w+(\.5)?)-\d\d/x
+
+		ODDS = /(<br><br>(?<home_line>-\d+(\.5)?))|(<br>(?<away_line>-\d+(\.5)?)[+-]\d\d<br>)|
+			((?<over_under>\d+(\.5)?)[ou]-\d{2}(?<home_line>-\d+(.5)?)-\d\d\z)|
+			((?<away_line>-\d+(.5)?)-\d\d(?<over_under>\d+(\.5)?)[ou]-\d{2}\z)/x
+		RUNLINE_ODDS = /(?<away_line>(\+|-)\d+(\.5)?)\/(\+|-)\d{3}(?<home_line>(\+|-)\d+(\.5)?)\/(\+|-)\d{3}/
+		MONEYLINE_ODDS = /((?<over_under>\d+(\.5)?)[ou]-\d{2})?(?<away_moneyline>(\+|-)\d{3}\d*)(?<home_moneyline>(\+|-)\d{3}\d*)/
 		
 		DOUBLEHEADER = /DH Gm (?<id>\d)/
 		RESULTS_DOUBLEHEADER = /\(DH (?<doubleheader>\d)\)/
@@ -453,7 +476,7 @@ class ScraperLeague
 	end
 
 	class Game
-		attr_reader :time, :home_team, :away_team, :home_team_odds, :away_team_odds, :over_under, :sport_id,
+		attr_reader :time, :away_team, :home_team, :vegas_info,
 			:ending, :winning_team, :winning_score, :losing_score, :ats_winner, :over_under_result, :doubleheader, :notes
 
 		def initialize(args = {})
@@ -461,12 +484,30 @@ class ScraperLeague
 		end
 
 		def update(args = {})
-			Game.sanitize(args).map { |attribute, value| instance_variable_set("@#{attribute}", value) }
+			Game.sanitize(args).map { |attribute, value| 
+				new_val = (attribute == :vegas_info && value && vegas_info) ? value.merge(vegas_info) : value
+				instance_variable_set("@#{attribute}", new_val)
+			}
 			return self
 		end
 
 		def teams_found?
 			home_team && away_team
+		end
+
+		def find_equal(games)
+			games.each { |game| return game if game == self }
+		end
+
+		def ==(other_game)
+			home_team == other_game.home_team && away_team == other_game.away_team && time.to_date == other_game.time.to_date && doubleheader == other_game.doubleheader
+		end
+
+		def home_or_away_team(team)
+			case team
+			when home_team then :home
+			when away_team then :away
+			else nil end
 		end
 
 		def as_json
@@ -475,10 +516,22 @@ class ScraperLeague
 
 		private
 		def self.sanitize(args)
-			permitted_keys = [:time, :home_team, :away_team, :home_team_odds, :away_team_odds, :over_under, :sport_id,
+			permitted_keys = [:time, :away_team, :home_team, :vegas_info,
 				:ending, :winning_team, :winning_score, :losing_score, :ats_winner, :over_under_result, :doubleheader, :notes]
 			args.select { |key,_| permitted_keys.include? key }
 		end
 	end
 
+end
+
+class Array
+  def as_json
+    map { |v| v.as_json }
+  end
+end
+
+class Hash
+	def compact
+    self.select { |_, value| !value.nil? }
+  end
 end

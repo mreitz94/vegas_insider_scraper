@@ -4,16 +4,13 @@ class MLB < ScraperLeague
 	def initialize
 		@sport_id = 4
 		@sport_name = :mlb
-		@moneyline_sport = true
 		super
+		@moneyline_sport = true
 	end
 
-	def get_games
-		urls = %w[http://www.vegasinsider.com/mlb/odds/las-vegas/ http://www.vegasinsider.com/mlb/odds/las-vegas/run]
-		urls.each do |url|
-			get_lines(url, sport_id)
-		end
-		return true
+	def current_games
+		@current_games ||= get_lines(["http://www.vegasinsider.com/#{sport_name}/odds/las-vegas/run/", 
+			"http://www.vegasinsider.com/#{sport_name}/odds/las-vegas/"])
 	end
 
 end

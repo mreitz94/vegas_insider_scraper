@@ -123,10 +123,13 @@ sports.first.current_games
 #     doubleheader: nil,
 #     home_team: 'north-carolina-state',
 #     away_team: 'south-carolina',
-#     home_team_odds: -5.0,
-#     away_team_odds: 5.0,
-#     over_under: "176.5",
-#     sport_id: 0,
+#     vegas_info: {
+#       away_moneyline: -135.0,
+#       home_moneyline: 115.0,
+#       away_line: -5,
+#       home_line: 5,
+#       over_under: 167.5	
+#     }
 #     notes: "Time change to 3:00pm EDT | TV: ESPN, DTV: 206",
 #   }
 #   ...
@@ -145,10 +148,13 @@ mlb_scraper.current_games
 #     doubleheader: nil,
 #     home_team: 'padres',
 #     away_team: 'tigers',
-#     home_team_odds: -1.5,
-#     away_team_odds: 1.5,
-#     over_under: "8.5",
-#     sport_id: 4,
+#     vegas_info: {
+#       away_moneyline: -160.0,
+#       home_moneyline: 150.0,
+#       away_line: -1.5,
+#       home_line: 1.5,
+#       over_under: 8.5	
+#     }
 #     notes: "TV: FS-Detroit, FS-San Diego, DTV: 663, 694",
 #   }
 #   ...
@@ -167,6 +173,7 @@ scraper.sports.first.team_schedules
 #   {
 #     team: 'alabama',
 #     games: [
+#       #<ScraperLeague::Game:...>,
 #       ...
 #     ]
 #   }
