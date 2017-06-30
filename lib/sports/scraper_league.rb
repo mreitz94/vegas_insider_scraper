@@ -250,18 +250,17 @@ class ScraperLeague
 				game_cell = game_row.at_css('td:first-child')
 				teams = game_cell_parser(game_cell)
 				game = Game.new(home_team: teams[1], away_team: teams[0]) 
+
 				if game.teams_found?
 					game.update(time: get_game_time(game_cell))
+					game.update(doubleheader: doubleheader_id(game_row.next&.next&.at_css('td:first-child')&.content))
 					is_first_url ? (games.push game) : (game = game.find_equal(games))
 					game.update(vegas_info: get_line(get_odds(game_row)))
 					game.update(vegas_info: get_line(get_odds_inner_html(game_row)))
 
-				else
+				elsif is_first_url
 					last_game = games.last
-					if last_game
-						last_game.update(notes: game_cell.content)
-						last_game.update(doubleheader: doubleheader_id(game_cell.content))
-					end
+					if last_game then last_game.update(notes: (last_game.notes ? "#{last_game.notes} / " : '') + game_cell.content) end
 				end
 			end
 		}
@@ -496,7 +495,7 @@ class ScraperLeague
 		end
 
 		def find_equal(games)
-			games.each { |game| return game if game == self }
+			games.detect { |g| g == self }
 		end
 
 		def ==(other_game)
