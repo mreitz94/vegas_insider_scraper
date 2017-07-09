@@ -203,7 +203,7 @@ class ScraperLeague
 	def format_team(url)
 		full_name = url.content
 		identifier = team_url_parser(url.attribute('href'))
-		nickname = identifier.capitalize
+		nickname = humanize_identifier(identifier)
 
 		return {
 			identifier: identifier,
@@ -222,6 +222,15 @@ class ScraperLeague
 		identifier = team_url_parser(url.attribute('href'))
 		nickname = full_name.gsub("#{location} ",'')
 
+		if nickname == full_name
+			nickname = full_name.gsub('&','').gsub("#{humanize_identifier(identifier)}", '').strip
+		end
+
+		if nickname == full_name.gsub('&','').strip
+			nickname_array = nickname.split(' ')
+			nickname = nickname_array.each_slice( (nickname_array.size/2.0).round ).to_a[1].join(' ')
+		end
+
 		return {
 			identifier: identifier,
 			nickname: nickname,
@@ -229,6 +238,10 @@ class ScraperLeague
 			full_name: full_name,
 			url: url.attribute('href').value
 		}
+	end
+
+	def humanize_identifier(identifier)
+		identifier.split('-').map { |x| x.capitalize }.join(' ')
 	end
 
 	# Utility method for scraping standings
@@ -297,11 +310,15 @@ class ScraperLeague
 	# Utility method for scraping current lines
 	# * parsing the lines for non-moneyline sports
 	def get_line(odds_string)
+		odds_string = odds_string.gsub('PK', '-0')
 		odds = matchdata_to_hash(RegularExpressions::ODDS.match(odds_string)) || {}
 		runlines_odds = matchdata_to_hash(RegularExpressions::RUNLINE_ODDS.match(odds_string)) || {}
 		moneyline_odds = matchdata_to_hash(RegularExpressions::MONEYLINE_ODDS.match(odds_string)) || {}
 
 		result = odds.merge(runlines_odds).merge(moneyline_odds)
+
+		puts odds_string
+
 		result.each { |k,v| result[k] = result[k].to_s.to_f if result[k] }
 		get_home_and_away(result)
 
@@ -462,8 +479,8 @@ class ScraperLeague
 		MONEYLINE_OVER_UNDER = /(?<ou>\d+(\.5)?)[ou]/x
 
 		ODDS = /(<br><br>(?<home_line>-\d+(\.5)?))|(<br>(?<away_line>-\d+(\.5)?)[+-]\d\d<br>)|
-			((?<over_under>\d+(\.5)?)[ou]-\d{2}(?<home_line>-\d+(.5)?)-\d\d\z)|
-			((?<away_line>-\d+(.5)?)-\d\d(?<over_under>\d+(\.5)?)[ou]-\d{2}\z)/x
+			((?<over_under>\d+(\.5)?)[ou]((-\d{2})|EV)(?<home_line>-\d+(.5)?)-\d\d\z)|
+			((?<away_line>-\d+(.5)?)-\d\d(?<over_under>\d+(\.5)?)[ou]((-\d{2})|EV)\z)/x
 		RUNLINE_ODDS = /(?<away_line>(\+|-)\d+(\.5)?)\/(\+|-)\d{3}(?<home_line>(\+|-)\d+(\.5)?)\/(\+|-)\d{3}/
 		MONEYLINE_ODDS = /((?<over_under>\d+(\.5)?)[ou]-\d{2})?(?<away_moneyline>(\+|-)\d{3}\d*)(?<home_moneyline>(\+|-)\d{3}\d*)/
 		
@@ -524,7 +541,7 @@ class ScraperLeague
 end
 
 class Array
-  def as_json
+  def as_json(options = nil)
     map { |v| v.as_json }
   end
 end
