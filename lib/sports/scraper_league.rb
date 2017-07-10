@@ -218,7 +218,7 @@ class ScraperLeague
 	# * formats the team using the URL and the Nokogiri document for the teams page
 	def format_college_team(url, teams_doc)
 		full_name = team_page_full_name(teams_doc, url)
-		location = url.content
+		location = url.content.gsub('AM', 'A&M').gsub('AT', 'A&T')
 		identifier = team_url_parser(url.attribute('href'))
 		nickname = full_name.gsub("#{location} ",'')
 
@@ -229,6 +229,10 @@ class ScraperLeague
 		if nickname == full_name.gsub('&','').strip
 			nickname_array = nickname.split(' ')
 			nickname = nickname_array.each_slice( (nickname_array.size/2.0).round ).to_a[1].join(' ')
+			nickname = nickname_exceptions(identifier,nickname)
+			puts identifier
+			puts nickname
+			puts "****************************"
 		end
 
 		return {
@@ -242,6 +246,15 @@ class ScraperLeague
 
 	def humanize_identifier(identifier)
 		identifier.split('-').map { |x| x.capitalize }.join(' ')
+	end
+
+	def nickname_exceptions(identifier,nickname)
+		case identifier
+		when 'california-state-long-beach' then '49ers'
+		when 'texas-am-corpus-christi' then 'Islanders'
+		when 'southern-am' then 'Jaguars'
+		when 'saint-marys-college-california' then 'Gaels'
+		else nickname end
 	end
 
 	# Utility method for scraping standings
