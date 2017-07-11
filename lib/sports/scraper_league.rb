@@ -230,9 +230,6 @@ class ScraperLeague
 			nickname_array = nickname.split(' ')
 			nickname = nickname_array.each_slice( (nickname_array.size/2.0).round ).to_a[1].join(' ')
 			nickname = nickname_exceptions(identifier,nickname)
-			puts identifier
-			puts nickname
-			puts "****************************"
 		end
 
 		return {
@@ -462,7 +459,7 @@ class ScraperLeague
 	# Utility method for scraping team page results
 	# * gets the identifier for an opponent without links
 	def custom_opponent_identifier(cell)
-		cell.content.strip.gsub(/(\s| )+/, '-').gsub('@-').downcase[0..-3]
+		cell.content.strip.gsub(/(\s| )+/, '-').gsub('@-','').downcase[0..-3]
 	end
 
 	# General Utility Method
@@ -475,7 +472,7 @@ class ScraperLeague
 	# used the remove all whitespace from the content of the element
 	def remove_element_whitespace(element)
 		string = element.content.gsub(/(\s| )+/, '')
-		string.empty? ? nil : string
+		string.empty? ? '' : string
 	end
 
 	def matchdata_to_hash(matchdata)
