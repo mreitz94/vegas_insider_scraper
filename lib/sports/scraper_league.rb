@@ -507,6 +507,7 @@ class ScraperLeague
 
 		def initialize(args = {})
 			Game.sanitize(args).map { |attribute, value| instance_variable_set("@#{attribute}", value) }
+			Game.update(vegas_info: {})
 		end
 
 		def update(args = {})
