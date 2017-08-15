@@ -362,7 +362,7 @@ class ScraperLeague
 		games = Nokogiri::HTML(open(url)).css('.main-content-cell table:nth-child(5) table').css('tr').each_with_index.map do |row,index|
 
 			next if index == 0
-			game = Game.new
+			game = Game.new(vegas_info: {})
 			opponent = nil
 
 			row.css('td').each_with_index do |cell,m|
@@ -422,10 +422,11 @@ class ScraperLeague
 		url = cell.at_css('a')
 		home_or_away = remove_element_whitespace(cell)[0] == "@" ? :away : :home
 		opponent = url ? team_url_parser(url.attribute('href')) : custom_opponent_identifier(cell)
+
 		{
 			opponent: opponent,
 			game_info: {
-				doubleheader: matchdata_to_hash(RegularExpressions::RESULTS_DOUBLEHEADER.match(cell.content))[:doubleheader],
+				doubleheader: matchdata_to_hash(RegularExpressions::RESULTS_DOUBLEHEADER.match(cell.content))['doubleheader'],
 				home_team: home_or_away == :home ? primary_team : opponent,
 				away_team: home_or_away == :away ? primary_team : opponent,
 			}
@@ -507,7 +508,6 @@ class ScraperLeague
 
 		def initialize(args = {})
 			Game.sanitize(args).map { |attribute, value| instance_variable_set("@#{attribute}", value) }
-			Game.update(vegas_info: {})
 		end
 
 		def update(args = {})
