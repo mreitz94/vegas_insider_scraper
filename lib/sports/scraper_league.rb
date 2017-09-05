@@ -44,8 +44,14 @@ class ScraperLeague
 		doc.css(standings_table_class).each do |conference|
 
 			conference_title = conference.at_css(".viHeaderNorm")
+
 			next if conference_title.nil?
+			puts "***********************************"
+			puts conference_title.content
+			puts "***********************************"
+
 			table = conference.css('.viBodyBorderNorm table')[standings_table_index]
+			table = conference.css('.viBodyBorderNorm table')[2] if conference_title.content == 'Conference USA'
 
 			if table
 				table.css('tr').each_with_index do |row, index|
@@ -107,7 +113,9 @@ class ScraperLeague
 		row.css('td').each_with_index do |cell, cell_index|
 			value = remove_element_whitespace(cell)
 			case cell_index
-			when 0 then team[:info] = format_college_team(cell.at_css('a'), teams_doc)
+			when 0 
+				puts value
+				team[:info] = format_college_team(cell.at_css('a'), teams_doc)
 			when 5 then team[:record][:overall_wins]   = value.to_i
 			when 6 then team[:record][:overall_losses] = value.to_i
 			when 9 then team[:record][:home_wins]		  = value.to_i
@@ -217,6 +225,7 @@ class ScraperLeague
 	# Utility method for scraping standings
 	# * formats the team using the URL and the Nokogiri document for the teams page
 	def format_college_team(url, teams_doc)
+
 		full_name = team_page_full_name(teams_doc, url)
 		location = url.content.gsub('AM', 'A&M').gsub('AT', 'A&T')
 		identifier = team_url_parser(url.attribute('href'))
@@ -326,8 +335,6 @@ class ScraperLeague
 		moneyline_odds = matchdata_to_hash(RegularExpressions::MONEYLINE_ODDS.match(odds_string)) || {}
 
 		result = odds.merge(runlines_odds).merge(moneyline_odds)
-
-		puts odds_string
 
 		result.each { |k,v| result[k] = result[k].to_s.to_f if result[k] }
 		get_home_and_away(result)
