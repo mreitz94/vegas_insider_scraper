@@ -46,12 +46,9 @@ class ScraperLeague
 			conference_title = conference.at_css(".viHeaderNorm")
 
 			next if conference_title.nil?
-			puts "***********************************"
-			puts conference_title.content
-			puts "***********************************"
 
 			table = conference.css('.viBodyBorderNorm table')[standings_table_index]
-			table = conference.css('.viBodyBorderNorm table')[2] if conference_title.content == 'Conference USA'
+			table = conference.css('.viBodyBorderNorm table')[2] if (conference_title.content == 'Conference USA' && sport_name == 'college-football')
 
 			if table
 				table.css('tr').each_with_index do |row, index|
@@ -114,7 +111,6 @@ class ScraperLeague
 			value = remove_element_whitespace(cell)
 			case cell_index
 			when 0 
-				puts value
 				team[:info] = format_college_team(cell.at_css('a'), teams_doc)
 			when 5 then team[:record][:overall_wins]   = value.to_i
 			when 6 then team[:record][:overall_losses] = value.to_i
