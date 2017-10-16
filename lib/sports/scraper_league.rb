@@ -135,12 +135,12 @@ class ScraperLeague
 			when 2 then team[:record][:overall_losses] = content.to_i
 			when 3 then team[:record][:overall_ties]	  = content.to_i
 			when 7
-				record = RegularExpressions::NFL_RECORD_REGEX.match(content)
+				record = RegularExpressions::NFL_RECORD_REGEX.match(content) || { wins: 0, losses: 0, ties: 0 }
 				team[:record][:home_wins] = record[:wins]
 				team[:record][:home_losses] = record[:losses]
 				team[:record][:home_ties] = record[:ties]
 			when 8
-				record = RegularExpressions::NFL_RECORD_REGEX.match(content)
+				record = RegularExpressions::NFL_RECORD_REGEX.match(content) || { wins: 0, losses: 0, ties: 0 }
 				team[:record][:away_wins] = record[:wins]
 				team[:record][:away_losses] = record[:losses]
 				team[:record][:away_ties] = record[:ties]
@@ -160,11 +160,11 @@ class ScraperLeague
 			when 1 then team[:record][:overall_wins] = content.to_i
 			when 2 then team[:record][:overall_losses] = content.to_i
 			when 5 
-				record = RegularExpressions::RECORD_REGEX.match(content)
+				record = RegularExpressions::RECORD_REGEX.match(content) || { wins: 0, losses: 0 }
 				team[:record][:home_wins]	= record[:wins]
 				team[:record][:home_losses]	= record[:losses]
 			when 6
-				record = RegularExpressions::RECORD_REGEX.match(content)
+				record = RegularExpressions::RECORD_REGEX.match(content) || { wins: 0, losses: 0 }
 				team[:record][:away_wins]	= record[:wins]
 				team[:record][:away_losses]	= record[:losses]
 			end
@@ -186,13 +186,13 @@ class ScraperLeague
 			when 4 then team[:record][:shootout_losses] = content.to_i
 			when 5 then team[:record][:points] = content.to_i
 			when 8 
-				record = RegularExpressions::NHL_RECORD_REGEX.match(content)	
+				record = RegularExpressions::NHL_RECORD_REGEX.match(content) || { wins: 0, losses: 0, ot_losses: 0, shootout_losses: 0 }
 				team[:record][:home_wins] = record[:wins]
 				team[:record][:home_losses] = record[:losses]
 				team[:record][:home_over_time_losses] = record[:ot_losses]
 				team[:record][:home_shootout_losses] = record[:shootout_losses]
 			when 9
-				record = RegularExpressions::NHL_RECORD_REGEX.match(content)	
+				record = RegularExpressions::NHL_RECORD_REGEX.match(content) || { wins: 0, losses: 0, ot_losses: 0, shootout_losses: 0 }
 				team[:record][:away_wins] = record[:wins]
 				team[:record][:away_losses] = record[:losses]
 				team[:record][:away_over_time_losses] = record[:ot_losses]
