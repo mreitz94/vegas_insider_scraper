@@ -1,5 +1,6 @@
 require 'nokogiri'
 require 'open-uri'
+require 'byebug'
 
 require 'sports/scraper_league'
 require 'sports/ncaafb'
@@ -10,13 +11,17 @@ require 'sports/mlb'
 require 'sports/nhl'
 
 class VegasInsiderScraper
+  attr_reader :sports
 
-	attr_reader :sports
-	# supported sports
-	SPORTS = [NCAAFB, NCAABB, NFL, NBA, MLB, NHL]
+  SPORTS = [NCAAFB, NCAABB, NFL, NBA, MLB, NHL]
 
-	def initialize
-		@sports = SPORTS.map { |sport| sport.new }
-	end
+  def initialize
+    @sports = SPORTS.map { |sport_class| sport_class.new }
+  end
 
+  SPORTS.each do |sport_class|
+    define_method(sport_class.to_s.downcase) do
+      @sports.select { |sport| sport.class == sport_class }.first
+    end
+  end
 end

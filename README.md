@@ -46,7 +46,7 @@ end
 sports.first.teams
 
 # [
-#	  ...,
+#    ...,
 #   {
 #      info: {
 #        indentifier: "maryland",
@@ -117,7 +117,7 @@ end
 sports.first.current_games
 
 # [
-#	  ...,
+#    ...,
 #   { 
 #     time: 2017-09-03 19:30:00 -400,
 #     doubleheader: nil,
@@ -128,7 +128,7 @@ sports.first.current_games
 #       home_moneyline: 115.0,
 #       away_line: -5,
 #       home_line: 5,
-#       over_under: 167.5	
+#       over_under: 167.5  
 #     }
 #     notes: "Time change to 3:00pm EDT | TV: ESPN, DTV: 206",
 #   }
@@ -142,7 +142,7 @@ or for a specific league
 mlb_scraper.current_games
 
 # [
-#	  ...,
+#    ...,
 #   { 
 #     time: 2017-06-24 22:10:00 -400,
 #     doubleheader: nil,
@@ -153,7 +153,7 @@ mlb_scraper.current_games
 #       home_moneyline: 150.0,
 #       away_line: -1.5,
 #       home_line: 1.5,
-#       over_under: 8.5	
+#       over_under: 8.5  
 #     }
 #     notes: "TV: FS-Detroit, FS-San Diego, DTV: 663, 694",
 #   }

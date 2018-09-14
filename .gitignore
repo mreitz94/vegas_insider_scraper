@@ -1,6 +1,7 @@
 
 /log
 /tmp
+.byebug_history
 
 vegas_insider_scraper-*.gem
 *.gemspec
