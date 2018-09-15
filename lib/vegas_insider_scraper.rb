@@ -1,6 +1,6 @@
 require 'nokogiri'
 require 'open-uri'
-require 'byebug'
+# require 'byebug'
 
 require 'sports/scraper_league'
 require 'sports/ncaafb'
