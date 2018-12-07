@@ -86,13 +86,13 @@ class ScraperLeague
   # Utility method for scraping standings
   # * gets the standings table class
   def standings_table_class
-    college_sport? ? '.SLTables1' : 'table' 
+    sport_name == "college-football" ? '.SLTables1' : 'table' 
   end
 
   # Utility method for scraping standings
   # * gets the index of the table
   def standings_table_index
-    college_sport? ? 1 : 0
+    sport_name == "college-football" ? 1 : 0
   end
 
   # Utility method for scraping standings
@@ -118,7 +118,8 @@ class ScraperLeague
   def scrape_standings_row(row, grouping, teams_doc)
     team_shell = { info: {}, record: {} }
     team = case sport_id
-    when 0,1 then college_standings_row_parser(row, team_shell, teams_doc)
+    when 0 then ncaafb_standings_row_parser(row, team_shell, teams_doc)
+    when 1 then ncaabb_standings_row_parser(row, team_shell, teams_doc)
     when 2 then nfl_standings_row_parser(row, team_shell)
     when 3,4 then pro_standings_row_parser(row, team_shell)
     when 5 then hockey_standings_row_parser(row, team_shell)
@@ -128,19 +129,48 @@ class ScraperLeague
   end
 
   # Utility method for scraping standings
-  # * scrapes a row of the standings, for COLLEGE sports
-  def college_standings_row_parser(row, team, teams_doc)
+  # * scrapes a row of the standings, for NCAAFB
+  def ncaafb_standings_row_parser(row, team, teams_doc)
     row.css('td').each_with_index do |cell, cell_index|
       value = remove_element_whitespace(cell)
       case cell_index
       when 0 
         team[:info] = format_college_team(cell.at_css('a'), teams_doc)
+      when 1 then team[:record][:conf_wins]   = value.to_i
+      when 2 then team[:record][:conf_losses] = value.to_i
       when 5 then team[:record][:overall_wins]   = value.to_i
       when 6 then team[:record][:overall_losses] = value.to_i
       when 9 then team[:record][:home_wins]      = value.to_i
       when 10 then team[:record][:home_losses]   = value.to_i
       when 13 then team[:record][:away_wins]     = value.to_i
       when 14 then team[:record][:away_losses]   = value.to_i
+      end
+    end
+    return team
+  end
+
+  # Utility method for scraping standings
+  # * scrapes a row of the standings, for NCAABB
+  def ncaabb_standings_row_parser(row, team, teams_doc)
+    row.css('td').each_with_index do |cell, cell_index|
+      value = remove_element_whitespace(cell)
+      case cell_index
+      when 0 
+        team[:info] = format_college_team(cell.at_css('a'), teams_doc)
+      when 1 then team[:record][:overall_wins]   = value.to_i
+      when 2 then team[:record][:overall_losses] = value.to_i
+      when 5 
+        record = RegularExpressions::RECORD_REGEX.match(value) || { wins: 0, losses: 0 }
+        team[:record][:home_wins]  = record[:wins].to_i
+        team[:record][:home_losses]  = record[:losses].to_i
+      when 6
+        record = RegularExpressions::RECORD_REGEX.match(value) || { wins: 0, losses: 0 }
+        team[:record][:away_wins]  = record[:wins].to_i
+        team[:record][:away_losses]  = record[:losses].to_i
+      when 7
+        record = RegularExpressions::RECORD_REGEX.match(value) || { wins: 0, losses: 0 }
+        team[:record][:conf_wins]  = record[:wins].to_i
+        team[:record][:conf_losses]  = record[:losses].to_i
       end
     end
     return team
@@ -358,8 +388,6 @@ class ScraperLeague
           result[:date] = date
 
           games.push(result)
-          puts result
-          puts "********************"
         end
       end
 
