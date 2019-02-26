@@ -598,7 +598,7 @@ class ScraperLeague
   # Utility method for scraping team page results
   # * gets the identifier for an opponent without links
   def custom_opponent_identifier(cell)
-    cell.content.strip.gsub(/(\s| )+/, '-').gsub('@-','').downcase[0..-3]
+    cell.content.strip.gsub(/(\s| )+/, '-').gsub('@-','').downcase[0..-2]
   end
 
   # General Utility Method
