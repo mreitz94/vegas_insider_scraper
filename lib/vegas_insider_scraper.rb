@@ -9,6 +9,7 @@ require 'sports/nba'
 require 'sports/nfl'
 require 'sports/mlb'
 require 'sports/nhl'
+require 'sports/soccer'
 
 class VegasInsiderScraper
   attr_reader :sports

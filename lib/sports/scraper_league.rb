@@ -630,6 +630,8 @@ class ScraperLeague
     ODDS = /(<br><br>(?<home_line>-\d+(\.5)?))|(<br>(?<away_line>-\d+(\.5)?)[+-]\d\d<br>)|
       ((?<over_under>\d+(\.5)?)[ou]((-\d{2})|EV)(?<home_line>-\d+(.5)?)-\d\d\z)|
       ((?<away_line>-\d+(.5)?)-\d\d(?<over_under>\d+(\.5)?)[ou]((-\d{2})|EV)\z)/x
+    SOCCER_ODDS = /(?<away_line>(-|\+)?((-0)|(\d|\.)+))(((\+|-)\d\d)|(EV))(?<home_line>(-|\+)?((-0)|(\d|\.)+))(((\+|-)\d\d)|(EV))/
+    SOCCER_MONEYLINE_ODDS = /(?<away_moneyline>(-|\+)\d+)(?<home_moneyline>(-|\+)\d+)(?<draw>(-|\+)\d+)(?<over_under>\d((\.5)|(\.25)|(\.75))?)(o|u).\d\d/
     RUNLINE_ODDS = /(?<away_line>(\+|-)\d+(\.5)?)\/(\+|-)\d{3}(?<home_line>(\+|-)\d+(\.5)?)\/(\+|-)\d{3}/
     MONEYLINE_ODDS = /((?<over_under>\d+(\.5)?)[ou]-\d{2})?(?<away_moneyline>(\+|-)\d{3}\d*)(?<home_moneyline>(\+|-)\d{3}\d*)/
     
@@ -642,7 +644,8 @@ class ScraperLeague
 
   class Game
     attr_reader :time, :away_team, :home_team, :vegas_info,
-      :ending, :winning_team, :winning_score, :losing_score, :ats_winner, :over_under_result, :doubleheader, :notes
+      :ending, :winning_team, :winning_score, :losing_score,
+      :ats_winner, :over_under_result, :doubleheader, :notes
 
     def initialize(args = {})
       Game.sanitize(args).map { |attribute, value| instance_variable_set("@#{attribute}", value) }
@@ -682,7 +685,8 @@ class ScraperLeague
     private
     def self.sanitize(args)
       permitted_keys = [:time, :away_team, :home_team, :vegas_info,
-        :ending, :winning_team, :winning_score, :losing_score, :ats_winner, :over_under_result, :doubleheader, :notes]
+        :ending, :winning_team, :winning_score, :losing_score,
+        :ats_winner, :over_under_result, :doubleheader, :notes]
       args.select { |key,_| permitted_keys.include? key }
     end
   end
