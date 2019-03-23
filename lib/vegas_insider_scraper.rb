@@ -2,27 +2,23 @@ require 'nokogiri'
 require 'open-uri'
 # require 'byebug'
 
-require 'sports/scraper_league'
-require 'sports/ncaafb'
-require 'sports/ncaabb'
-require 'sports/nba'
-require 'sports/nfl'
-require 'sports/mlb'
-require 'sports/nhl'
-require 'sports/soccer'
+require 'vegas_insider_scraper/scraper_league'
+require 'vegas_insider_scraper/ncaafb'
+require 'vegas_insider_scraper/ncaabb'
+require 'vegas_insider_scraper/nba'
+require 'vegas_insider_scraper/nfl'
+require 'vegas_insider_scraper/mlb'
+require 'vegas_insider_scraper/nhl'
+require 'vegas_insider_scraper/soccer'
 
-class VegasInsiderScraper
-  attr_reader :sports
-
-  SPORTS = [NCAAFB, NCAABB, NFL, NBA, MLB, NHL]
-
-  def initialize
-    @sports = SPORTS.map { |sport_class| sport_class.new }
-  end
-
-  SPORTS.each do |sport_class|
-    define_method(sport_class.to_s.downcase) do
-      @sports.select { |sport| sport.class == sport_class }.first
-    end
-  end
+module VegasInsiderScraper
+  SPORTS = [
+    VegasInsiderScraper::NCAAFB,
+    VegasInsiderScraper::NCAABB,
+    VegasInsiderScraper::NFL,
+    VegasInsiderScraper::NBA,
+    VegasInsiderScraper::MLB,
+    VegasInsiderScraper::NHL,
+    VegasInsiderScraper::Soccer
+  ]
 end

@@ -2,7 +2,6 @@ require 'nokogiri'
 require 'open-uri'
 
 class ScraperLeague
-
   attr_reader :sport_id
   attr_reader :sport_name
   attr_reader :moneyline_sport
@@ -27,17 +26,21 @@ class ScraperLeague
 
   # Gets all of the schedule and results for each team
   def team_schedules
-    @team_schedules ||= teams.map { |team|
-      puts " ### GETTING GAMES FOR:   #{team[:info][:full_name]}"
-      url = "http://www.vegasinsider.com/#{sport_name}/teams/team-page.cfm/team/#{team[:info][:identifier]}"
-      scrape_team_page(url, team[:info][:identifier])
-    }
+    @team_schedules ||= teams.map do |team|
+      puts " >>>>>> GETTING GAMES FOR:   #{team[:info][:full_name]}"
+      team_schedule_for(team[:info][:identifier])
+    end
   end
 
-  def live_scores
-    @live_scores = get_live_scores("https://web.archive.org/web/20170704205945/http://www.vegasinsider.com/mlb/scoreboard/")
-    nil
+  def team_schedules_for(identifier)
+    url = "http://www.vegasinsider.com/#{sport_name}/teams/team-page.cfm/team/#{identifier}"
+    scrape_team_page(url, identifier)
   end
+
+  # def live_scores
+  #   @live_scores = get_live_scores("https://web.archive.org/web/20170704205945/http://www.vegasinsider.com/mlb/scoreboard/")
+  #   nil
+  # end
 
   private
 
