@@ -2,10 +2,13 @@ require 'nokogiri'
 require 'open-uri'
 
 class ScraperLeague
-  attr_reader :sport_id
-  attr_reader :sport_name
+  attr_reader :vegas_sport_identifier
   attr_reader :moneyline_sport
   attr_reader :teams
+
+  def sport_name
+    self.class.name.split('::').last.downcase
+  end
 
   def initialize
     @moneyline_sport = false
@@ -21,7 +24,7 @@ class ScraperLeague
 
   # Gets the upcoming/current games for the sport
   def current_games
-    @current_games ||= get_lines(["http://www.vegasinsider.com/#{sport_name}/odds/las-vegas/","http://www.vegasinsider.com/#{sport_name}/odds/las-vegas/money/"])
+    @current_games ||= get_lines(["http://www.vegasinsider.com/#{vegas_sport_identifier}/odds/las-vegas/","http://www.vegasinsider.com/#{vegas_sport_identifier}/odds/las-vegas/money/"])
   end
 
   # Gets all of the schedule and results for each team
@@ -32,8 +35,8 @@ class ScraperLeague
     end
   end
 
-  def team_schedules_for(identifier)
-    url = "http://www.vegasinsider.com/#{sport_name}/teams/team-page.cfm/team/#{identifier}"
+  def schedule_for(identifier)
+    url = "http://www.vegasinsider.com/#{vegas_sport_identifier}/teams/team-page.cfm/team/#{identifier}"
     scrape_team_page(url, identifier)
   end
 
@@ -45,7 +48,7 @@ class ScraperLeague
   private
 
   def scrape_teams
-    url = "http://www.vegasinsider.com/#{sport_name}/teams/"
+    url = "http://www.vegasinsider.com/#{vegas_sport_identifier}/teams/"
     doc = Nokogiri::HTML(open(url)).at_css('.main-content-cell')
 
     doc.css('a').map do |team_link|
@@ -65,7 +68,7 @@ class ScraperLeague
   # Gets the teams and scrapes the records for the teams
   def scrape_standings
     standings_teams = []
-    url = "http://www.vegasinsider.com/#{sport_name}/standings/"
+    url = "http://www.vegasinsider.com/#{vegas_sport_identifier}/standings/"
     doc = Nokogiri::HTML(open(url)).at_css('.main-content-cell')
     teams_doc = Nokogiri::HTML(open(url.gsub('standings','teams'))).at_css('.main-content-cell')
 
@@ -74,7 +77,7 @@ class ScraperLeague
       next if conference_title.nil?
 
       table = conference.css('.viBodyBorderNorm table')[standings_table_index]
-      table = conference.css('.viBodyBorderNorm table')[2] if (conference_title.content == 'Conference USA' && sport_name == 'college-football')
+      table = conference.css('.viBodyBorderNorm table')[2] if (conference_title.content == 'Conference USA' && vegas_sport_identifier == 'college-football')
 
       if table
         table.css('tr').each_with_index do |row, index|
@@ -89,13 +92,13 @@ class ScraperLeague
   # Utility method for scraping standings
   # * gets the standings table class
   def standings_table_class
-    sport_name == "college-football" ? '.SLTables1' : 'table' 
+    vegas_sport_identifier == "college-football" ? '.SLTables1' : 'table' 
   end
 
   # Utility method for scraping standings
   # * gets the index of the table
   def standings_table_index
-    sport_name == "college-football" ? 1 : 0
+    vegas_sport_identifier == "college-football" ? 1 : 0
   end
 
   # Utility method for scraping standings
@@ -113,19 +116,20 @@ class ScraperLeague
   # Utility method for scraping standings
   # * is a college sport?
   def college_sport?
-    ['college-football','college-basketball'].include?(sport_name)
+    ['college-football','college-basketball'].include?(vegas_sport_identifier)
   end
 
   # Utility method for scraping standings
   # * scrapes a row of the standings, chooses a helper method based on the league
   def scrape_standings_row(row, grouping, teams_doc)
     team_shell = { info: {}, record: {} }
-    team = case sport_id
-    when 0 then ncaafb_standings_row_parser(row, team_shell, teams_doc)
-    when 1 then ncaabb_standings_row_parser(row, team_shell, teams_doc)
-    when 2 then nfl_standings_row_parser(row, team_shell)
-    when 3,4 then pro_standings_row_parser(row, team_shell)
-    when 5 then hockey_standings_row_parser(row, team_shell)
+
+    team = case vegas_sport_identifier
+    when 'college-football' then ncaafb_standings_row_parser(row, team_shell, teams_doc)
+    when 'college-basketball' then ncaabb_standings_row_parser(row, team_shell, teams_doc)
+    when 'nfl' then nfl_standings_row_parser(row, team_shell)
+    when 'mlb', 'nba' then pro_standings_row_parser(row, team_shell)
+    when 'nhl' then hockey_standings_row_parser(row, team_shell)
     end
     team[:grouping] = grouping
     team

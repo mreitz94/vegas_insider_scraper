@@ -21,4 +21,32 @@ module VegasInsiderScraper
     VegasInsiderScraper::NHL,
     VegasInsiderScraper::Soccer
   ]
+
+  def self.ncaafb
+    VegasInsiderScraper::NCAAFB.new
+  end
+
+  def self.ncaabb
+    VegasInsiderScraper::NCAABB.new
+  end
+
+  def self.nfl
+    VegasInsiderScraper::NFL.new
+  end
+
+  def self.nba
+    VegasInsiderScraper::NBA.new
+  end
+
+  def self.mlb
+    VegasInsiderScraper::MLB.new
+  end
+
+  def self.nhl
+    VegasInsiderScraper::NHL.new
+  end
+
+  def self.soccer
+    VegasInsiderScraper::Soccer.new
+  end
 end

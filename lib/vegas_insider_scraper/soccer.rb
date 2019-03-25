@@ -2,15 +2,15 @@
 module VegasInsiderScraper
   class Soccer < ScraperLeague
     def initialize
-      @sport_name = 'soccer'
+      @vegas_sport_identifier = 'soccer'
       super
       @moneyline_sport = true
     end
 
     def current_games
       @current_games ||= get_lines([
-        "http://www.vegasinsider.com/#{sport_name}/odds/las-vegas/spread",
-        "http://www.vegasinsider.com/#{sport_name}/odds/las-vegas/"
+        "http://www.vegasinsider.com/#{vegas_sport_identifier}/odds/las-vegas/spread",
+        "http://www.vegasinsider.com/#{vegas_sport_identifier}/odds/las-vegas/"
       ])
     end
 

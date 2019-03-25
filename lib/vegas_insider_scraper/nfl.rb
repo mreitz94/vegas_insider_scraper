@@ -2,7 +2,7 @@
 module VegasInsiderScraper
   class NFL < ScraperLeague
     def initialize
-      @sport_name = 'nfl'
+      @vegas_sport_identifier = 'nfl'
       super
     end
   end

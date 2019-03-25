@@ -2,7 +2,7 @@
 module VegasInsiderScraper
   class NCAABB < ScraperLeague
     def initialize
-      @sport_name = 'college-basketball'
+      @vegas_sport_identifier = 'college-basketball'
       super
     end
   end
