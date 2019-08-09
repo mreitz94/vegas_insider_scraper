@@ -52,7 +52,7 @@ class ScraperLeague
     doc = Nokogiri::HTML(open(url)).at_css('.main-content-cell')
 
     doc.css('a').map do |team_link|
-    	team = {}
+      team = {}
       team[:info] = format_college_team(team_link, doc)
 
       row = team_link.parent.parent.previous
@@ -92,7 +92,7 @@ class ScraperLeague
   # Utility method for scraping standings
   # * gets the standings table class
   def standings_table_class
-    vegas_sport_identifier == "college-football" ? '.SLTables1' : 'table' 
+    vegas_sport_identifier == "college-football" ? '.SLTables1' : 'table'
   end
 
   # Utility method for scraping standings
@@ -141,7 +141,7 @@ class ScraperLeague
     row.css('td').each_with_index do |cell, cell_index|
       value = remove_element_whitespace(cell)
       case cell_index
-      when 0 
+      when 0
         team[:info] = format_college_team(cell.at_css('a'), teams_doc)
       when 1 then team[:record][:conf_wins]   = value.to_i
       when 2 then team[:record][:conf_losses] = value.to_i
@@ -162,11 +162,11 @@ class ScraperLeague
     row.css('td').each_with_index do |cell, cell_index|
       value = remove_element_whitespace(cell)
       case cell_index
-      when 0 
+      when 0
         team[:info] = format_college_team(cell.at_css('a'), teams_doc)
       when 1 then team[:record][:overall_wins]   = value.to_i
       when 2 then team[:record][:overall_losses] = value.to_i
-      when 5 
+      when 5
         record = RegularExpressions::RECORD_REGEX.match(value) || { wins: 0, losses: 0 }
         team[:record][:home_wins]  = record[:wins].to_i
         team[:record][:home_losses]  = record[:losses].to_i
@@ -219,7 +219,7 @@ class ScraperLeague
       when 0 then team[:info] = format_team(cell.at_css('a'))
       when 1 then team[:record][:overall_wins] = content.to_i
       when 2 then team[:record][:overall_losses] = content.to_i
-      when 5 
+      when 5
         record = RegularExpressions::RECORD_REGEX.match(content) || { wins: 0, losses: 0 }
         team[:record][:home_wins]  = record[:wins]
         team[:record][:home_losses]  = record[:losses]
@@ -237,7 +237,7 @@ class ScraperLeague
   def hockey_standings_row_parser(row, team)
     row.css('td').each_with_index do |cell, cell_index|
       content = remove_element_whitespace(cell)
-      
+
       case cell_index
       when 0 then team[:info] = format_team(cell.at_css('a'))
       when 1 then team[:record][:overall_wins] = content.to_i
@@ -245,7 +245,7 @@ class ScraperLeague
       when 3 then team[:record][:over_time_losses] = content.to_i
       when 4 then team[:record][:shootout_losses] = content.to_i
       when 5 then team[:record][:points] = content.to_i
-      when 8 
+      when 8
         record = RegularExpressions::NHL_RECORD_REGEX.match(content) || { wins: 0, losses: 0, ot_losses: 0, shootout_losses: 0 }
         team[:record][:home_wins] = record[:wins]
         team[:record][:home_losses] = record[:losses]
@@ -267,7 +267,7 @@ class ScraperLeague
   def format_team(url)
     full_name = url.content
     identifier = team_url_parser(url.attribute('href'))
-    nickname = humanize_identifier(identifier)
+    nickname = humanize_identifier(identifier)[0]
 
     {
       identifier: identifier,
@@ -287,7 +287,10 @@ class ScraperLeague
     nickname = full_name.gsub("#{location} ",'')
 
     if nickname == full_name
-      nickname = full_name.gsub('&','').gsub("#{humanize_identifier(identifier)}", '').strip
+      nickname = full_name.gsub('&','')
+        .gsub(humanize_identifier(identifier)[0], '')
+        .gsub(humanize_identifier(identifier)[1], '')
+        .strip
     end
 
     if nickname == full_name.gsub('&','').strip
@@ -296,17 +299,28 @@ class ScraperLeague
       nickname = nickname_exceptions(identifier,nickname)
     end
 
+    location = full_name.gsub(" #{nickname}", '');
+
+    ap full_name
+    ap location
+    ap identifier
+    ap nickname
+    ap "***************************"
+
     return {
       identifier: identifier,
       nickname: nickname,
-      location: full_name.gsub(" #{nickname}", ''),
+      location: location,
       full_name: full_name,
       url: url.attribute('href').value
     }
   end
 
   def humanize_identifier(identifier)
-    identifier.split('-').map { |x| x.capitalize }.join(' ')
+    [
+      identifier.split('-').map(&:capitalize).join(' '),
+      identifier.split('-').map(&:capitalize).join('-')
+    ]
   end
 
   def nickname_exceptions(identifier,nickname)
@@ -346,7 +360,7 @@ class ScraperLeague
 
           result = {}
           game.css('.tanBg a').each_with_index do |team, i|
-            if i == 0 
+            if i == 0
               result[:away_team] = team_url_parser(team.attribute('href'))
             else
               result[:home_team] = team_url_parser(team.attribute('href'))
@@ -386,8 +400,8 @@ class ScraperLeague
           end
 
           if segment_titles
-            result[:scoring] = segment_titles.each_with_index.map { |s,i| 
-              { period: s, away: away_values[i], home: home_values[i] } 
+            result[:scoring] = segment_titles.each_with_index.map { |s,i|
+              { period: s, away: away_values[i], home: home_values[i] }
             }
           end
 
@@ -419,7 +433,7 @@ class ScraperLeague
 
         game_cell = game_row.at_css('td:first-child')
         teams = game_cell_parser(game_cell)
-        game = Game.new(home_team: teams[1], away_team: teams[0]) 
+        game = Game.new(home_team: teams[1], away_team: teams[0])
 
         if game.teams_found?
           game.update(time: get_game_time(game_cell))
@@ -514,7 +528,7 @@ class ScraperLeague
 
         case m
         when 0 then game.update(time: get_game_date(cell,row))
-        when 1 
+        when 1
           info = get_game_info(cell, team)
           opponent = info[:opponent]
           game.update(info[:game_info])
@@ -559,7 +573,7 @@ class ScraperLeague
   # * determines if the game has concluded
   def game_finished?(row)
     !"#{RegularExpressions::GAME_RESULTS.match(remove_element_whitespace(row.at_css('td:nth-child(5)')))}".empty?
-  end 
+  end
 
   # Utility method for scraping team page results
   # * gets the home_team, away_team, and doubleheader info
@@ -641,7 +655,7 @@ class ScraperLeague
     SOCCER_MONEYLINE_ODDS = /(?<away_moneyline>(-|\+)\d+)(?<home_moneyline>(-|\+)\d+)(?<draw>(-|\+)\d+)(?<over_under>\d((\.5)|(\.25)|(\.75))?)(o|u).\d\d/
     RUNLINE_ODDS = /(?<away_line>(\+|-)\d+(\.5)?)\/(\+|-)\d{3}(?<home_line>(\+|-)\d+(\.5)?)\/(\+|-)\d{3}/
     MONEYLINE_ODDS = /((?<over_under>\d+(\.5)?)[ou]-\d{2})?(?<away_moneyline>(\+|-)\d{3}\d*)(?<home_moneyline>(\+|-)\d{3}\d*)/
-    
+
     DOUBLEHEADER = /DH Gm (?<id>\d)/
     RESULTS_DOUBLEHEADER = /\(DH (?<doubleheader>\d)\)/
 
@@ -659,7 +673,7 @@ class ScraperLeague
     end
 
     def update(args = {})
-      Game.sanitize(args).map { |attribute, value| 
+      Game.sanitize(args).map { |attribute, value|
         new_val = (attribute == :vegas_info && value && vegas_info) ? value.merge(vegas_info) : value
         instance_variable_set("@#{attribute}", new_val)
       }
